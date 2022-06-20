@@ -1,0 +1,214 @@
+import json
+import boto3
+import random
+import smtplib
+from boto3.dynamodb.conditions import Key
+tablename = 'doctors'
+db = boto3.resource('dynamodb',region_name='us-east-1')
+client_lex = boto3.client('lex-runtime',region_name='us-east-1')
+table = db.Table(tablename)
+def fun(department):
+    return_statement = { 
+        "dialogAction": {
+            "type": "Close",
+            "fulfillmentState": "Fulfilled",
+            "message": {
+                "contentType": "PlainText",
+                "content": "The department to refer is : "+department+" Doctor not available. Thank you for contacting"
+            }
+        }
+    }
+    return return_statement
+def emailing(email,n):
+    n=n+" is your userID for Appointment"
+    server = smtplib . SMTP( 'smtp.gmail.com' , 587)
+    server.starttls()
+    server.login('cloudhealtbot@gmail.com','zyklsusyllyoumqt')
+    server.sendmail('cloudhealtbot@gmail.com',email,n)   
+        
+def greetings_intent1(event):
+    primary_column_key = 'S.NO'
+    primary_key = '1'
+    department = event["currentIntent"]["slots"]["Department"]
+    pincode=event["currentIntent"]["slots"]["Pincode"]
+    print(department)
+    print(pincode)
+    response = table.query(IndexName='Department-index', KeyConditionExpression=Key('Department').eq(department))
+    docs=[]
+    h=[]
+    d=[]
+    t=[]
+    flag=0
+    for i in range(len(response['Items'])):
+        if response['Items'][i]['Area'] ==pincode:
+            docs.append(response['Items'][i]['Name'])
+            h.append(response['Items'][i]['Hospital'])
+            d.append(response['Items'][i]['OPD_Days'])
+            t.append(response['Items'][i]['Timings'])
+            flag=1
+    if flag==0:
+        s="Doctor not available. Thank you for contacting"
+        return_statement=fun(department)
+    else:
+        return_statement = { 
+            "dialogAction": {
+                "type": "Close",
+                "fulfillmentState": "Fulfilled",
+                "message": {
+                  "contentType": "PlainText",
+                  "content": "The department to refer is " + department
+                },
+                "responseCard": {
+                  "version":"1",
+                  "contentType": "application/vnd.amazonaws.card.generic",
+                  "genericAttachments": [
+                      {
+                         "title":"Doctor:",
+                         "subTitle":department,
+                         "buttons":[
+    
+                         ]
+                      },
+                      {
+                              "title":"Hospital",
+                          "subTitle":"Hospital",
+                          "buttons":[
+                              
+                          ]
+                      },
+                      {
+                          "title":"Days Available",
+                          "subTitle":"Days Available",
+                          "buttons":[
+                              
+                        
+                          ]
+                      },
+                      {
+                          "title":"Timings available",
+                          "subTitle":"Timings available",
+                          "buttons":[
+                              
+                          ]
+                      }
+                  ] 
+                }
+             }
+        }
+        return_statement = json.dumps(return_statement)
+        return_statement = json.loads(return_statement)
+        
+    if flag==1:
+        for i in range(len(docs)):
+            dict_ = {'text':docs[i],"value": docs[i]}
+            dict_h = {'text':h[i],"value": h[i]}
+            dict_d = {'text':d[i],"value": d[i]}
+            dict_t= {'text':t[i],"value": t[i]}
+            dict_ = json.dumps(dict_)
+            dict_ = json.loads(dict_)
+            dict_h = json.dumps(dict_h)
+            dict_h = json.loads(dict_h)
+            return_statement["dialogAction"]["responseCard"]["genericAttachments"][0]["buttons"].append(dict_)
+            return_statement["dialogAction"]["responseCard"]["genericAttachments"][1]["buttons"].append(dict_h)
+            return_statement["dialogAction"]["responseCard"]["genericAttachments"][2]["buttons"].append(dict_d)
+            return_statement["dialogAction"]["responseCard"]["genericAttachments"][3]["buttons"].append(dict_t)
+    return return_statement 
+def check(event):
+    p=1
+    table = db.Table('Appointment')
+    while(p):
+        n = random.randint(1,10000)
+        a= random.randint(1,10000)
+        n=str(n)
+        response = table.query(IndexName='UserID-index', KeyConditionExpression=Key('UserID').eq(n))
+        if(len(response['Items'])>=1):
+            p=1
+        else:
+            p=0
+    email = event["currentIntent"]["slots"]["mail"]
+    print(email)
+    r=" "
+    if email!="no":
+        emailing(email,n)
+        r=" Check your spam messges in mail for reference"
+    return_statement= { 
+        "dialogAction": {
+            "type": "Close",
+            "fulfillmentState": "Fulfilled",
+            "message": {
+                "contentType": "PlainText",
+                "content": "Your booking is confirmed, Thank you for contacting your booking id is: "+n+r+"Get Well Soon!"
+            }
+        }
+    }
+    table.put_item(Item={'S.NO': a ,'UserID': n,'Email': email},)
+    return return_statement
+def bookappointment(event):
+    docs=[]
+    doctor_name = event["currentIntent"]["slots"]["Doctor_Name"]
+    day = event["currentIntent"]["slots"]["opd_days"]    
+    response = table.query(IndexName='Name-index',KeyConditionExpression=Key('Name').eq(doctor_name))
+    for j in range(len(response['Items'])):
+        if response['Items'][j]['Name'] == doctor_name:
+            docs.append(response['Items'][j])
+    opddays_arr = str(docs[0]["OPD_Days"]).split(",")
+    print(opddays_arr)
+    print(day)
+    if day in opddays_arr:
+        a=docs[0]["Timings"].split("-")
+        print(a)
+        return_statement= { 
+            "dialogAction": {
+                "type": "Close",
+                "fulfillmentState": "Fulfilled",
+                "message": {
+                    "contentType": "PlainText",
+                    "content": "Select time"
+                },
+            "responseCard": {
+              "version":"1",
+              "contentType": "application/vnd.amazonaws.card.generic",
+              "genericAttachments": [
+                  {
+                     "title":"Time",
+                     "subTitle":"Select",
+                     "buttons":[
+
+                     ]
+                  }
+                ]
+            }
+        }
+        }
+        p=int(a[0])
+        while(p!=int(a[1])):
+            if(p==24):
+                p=0
+            else:
+                s=str(p)+":00"
+                dict_ = {'text':s,"value": p}
+                dict_ = json.dumps(dict_)
+                dict_ = json.loads(dict_)
+                return_statement["dialogAction"]["responseCard"]["genericAttachments"][0]["buttons"].append(dict_)
+                p+=1
+        print(p)
+    else:
+        a=str(docs[0]["OPD_Days"])
+        return_statement= { 
+            "dialogAction": {
+                "type": "Close",
+                "fulfillmentState": "Fulfilled",
+                "message": {
+                    "contentType": "PlainText",
+                    "content": "Doctor not available on that day,Doctor available days are:"+a+"Thank you for contacting"
+                }
+            }
+        }
+    return return_statement
+def lambda_handler(event, context):
+    if event["currentIntent"]["name"] == 'Greetings':
+        return greetings_intent1(event)
+    elif event["currentIntent"]["name"] == 'BookAnAppointment':
+        return bookappointment(event)
+    elif event["currentIntent"]["name"] == 'Confirm':
+        return check(event)
