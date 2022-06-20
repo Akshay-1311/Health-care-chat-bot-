@@ -1,0 +1,26 @@
+Problem Statement
+The chatbot was created in order to provide medical services to people sitting at home in these troubling times and help them 
+find a doctor suitable to their requirements and book an appointment using the chatbot.
+
+Services Used:
+
+Amazon web services – Lex:
+Amazon Lex is an AWS service for building conversational interfaces for applications using voice and text.
+With Amazon Lex, the same conversational engine that powers Amazon Alexa is now available to any developer, 
+enabling you to build sophisticated, natural language chatbots into your new and existing applications.
+
+Amazon web services – Lambda:
+AWS Lambda is a serverless, event-driven compute service that lets you run code for virtually any type of application or backend service without provisioning or managing servers.
+You can trigger Lambda from over 200 AWS services and software as a service (SaaS) application, and only pay for what you use.
+
+
+Amazon web services – Dynamo-DB:
+Amazon DynamoDB is a fully managed, serverless, key-value NoSQL database designed to run high-performance applications at any scale. 
+DynamoDB offers built-in security, continuous backups, automated multi-Region replication, in-memory caching, and data export tools.
+
+
+Amazon web services – Amplify:
+AWS Amplify is a set of purpose-built tools and features that lets frontend web and mobile developers quickly and
+easily build full-stack applications on AWS, with the flexibility to leverage the breadth of AWS services as your use cases evolve.
+With Amplify, you can configure a web or mobile app backend, connect your app in minutes, visually build a web frontend UI,
+and easily manage app content outside the AWS console. Ship faster and scale effortlessly—with no cloud expertise needed.
